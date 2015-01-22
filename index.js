@@ -2,7 +2,8 @@
  * Module dependencies
  */
 
-var Emitter = require('component-emitter');
+var Emitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
 var Form = require('./lib/form');
 
 /**
@@ -27,32 +28,26 @@ exports.Input = require('./lib/input');
  * Create a form store
  */
 
-function FormStore() {
-  this._forms = {};
+function FormStore(client) {
+  Emitter.call(this);
+  this.global = {};
+  this._client = client;
 }
-Emitter(FormStore.prototype);
+inherits(FormStore, Emitter);
 
 /**
- * Get a form by id
+ * Create a form from a descriptor
  */
 
-FormStore.prototype.get = function(name) {
-  var self = this;
-  var forms = self._forms;
-  if (forms[name]) return forms[name];
-  return forms[name] = new Form(name);
-};
-
-FormStore.prototype.register = function(name, config) {
-  var self = this;
-  var forms = self._forms;
-  var form = forms[name];
-  if (!form) {
-    form = forms[name] = new Form(name);
-    this.emit('form', form);
+FormStore.prototype.create = function(formObj, name) {
+  var global = this.global;
+  if (name && global[name]) return global[name];
+  var form = new Form(formObj, this._client, name);
+  if (name) {
+    global[name] = form;
+    form.on('destroy', function() {
+      delete global[name];
+    });
   }
-  if (config) form.update(config);
   return form;
 };
-
-// TODO figure out deletion
