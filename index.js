@@ -43,10 +43,16 @@ FormStore.prototype.create = function(formObj, name) {
   var global = this.global;
   if (name && global[name]) return global[name];
   var form = new Form(formObj, this._client, name);
+
+  form.on('rename', function(newName) {
+    if (!newName) delete global[newName];
+    else global[newName] = form;
+  });
+
   if (name) {
     global[name] = form;
     form.on('destroy', function() {
-      delete global[name];
+      delete global[form.name];
     });
   }
   return form;
