@@ -11,6 +11,7 @@ var Form = require('./lib/form');
  */
 
 exports = module.exports = FormStore;
+exports['default'] = exports;
 
 /**
  * Expose the Form constructor
